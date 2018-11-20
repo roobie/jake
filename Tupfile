@@ -1,6 +1,6 @@
-CFLAGS = -Wall -std=c++1z -D_REENTRANT
+CFLAGS = -Wall -std=c++17 -D_REENTRANT
 INCLUDE = -I/usr/include/SDL2 -I/usr/include/luajit-2.0 -I/usr/include/libdrm -I./imgui
 LIBS = -lSDL2 -lGL
 
-: foreach *.cpp |> clang++ $(CFLAGS) $(INCLUDE) -c %f -o %o |> %B.o
+: foreach *.cpp |> clang++-7 $(CFLAGS) $(INCLUDE) -c %f -o %o |> %B.o
 : *.o imgui/libimgui.a |> clang++ %f -o %o $(LIBS) |> jake
