@@ -13,6 +13,11 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 
+#define SDL_CHECK(OP) { \
+    (OP); \
+    displayError(#OP, SDL_GetError()) \
+  };
+
 void displayError(const char* info, const char* msg) {
   printf("Error: %s - %s\n", info, msg);
 }
@@ -26,7 +31,7 @@ main(int, char**) {
     return -1;
   }
 
-  if (0 != SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)) displayError("GL ATTR", SDL_GetError());
+  SDL_CHECK(SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1));
   if (0 != SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24)) displayError("GL ATTR", SDL_GetError());
   if (0 != SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8)) displayError("GL ATTR", SDL_GetError());
   if (0 != SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2)) displayError("GL ATTR", SDL_GetError());
