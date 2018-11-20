@@ -1,0 +1,5 @@
+CFLAGS = -Wall -D_REENTRANT
+INCLUDE = -I/usr/include/SDL2 -I/usr/include/luajit-2.0 -I/usr/include/libdrm
+LIBS = -lSDL2 -lGL
+: foreach *.cpp |> clang++ $(CFLAGS) $(INCLUDE) -c %f -o %o |> %B.o
+: *.o |> clang++ %f -o %o $(LIBS) |> jake
