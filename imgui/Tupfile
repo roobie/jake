@@ -1,0 +1,6 @@
+CFLAGS = -Wall
+INCLUDE =
+LIBS =
+
+: foreach *.cpp |> clang++ $(CFLAGS) $(INCLUDE) -c %f -o %o |> %B.o
+: *.o |> ar crs %o %f |> libimgui.a
