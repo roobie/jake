@@ -1,4 +1,4 @@
-CFLAGS = -Wall -D_REENTRANT
+CFLAGS = -Wall -std=c++1z -D_REENTRANT
 INCLUDE = -I/usr/include/SDL2 -I/usr/include/luajit-2.0 -I/usr/include/libdrm -I./imgui
 LIBS = -lSDL2 -lGL
 

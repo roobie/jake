@@ -13,27 +13,38 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 
-int
-main(int, char**)
-{
-  // Setup SDL
-  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) != 0)
-    {
-      printf("Error: %s\n", SDL_GetError());
-      return -1;
-    }
+void displayError(const char* info, const char* msg) {
+  printf("Error: %s - %s\n", info, msg);
+}
 
-  // Setup window
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+int
+main(int, char**) {
+  int result;
+
+  if (0 != SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER)) {
+    displayError("SDL_Init(...)", SDL_GetError());
+    return -1;
+  }
+
+  if (0 != SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)) displayError("GL ATTR", SDL_GetError());
+  if (0 != SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24)) displayError("GL ATTR", SDL_GetError());
+  if (0 != SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8)) displayError("GL ATTR", SDL_GetError());
+  if (0 != SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2)) displayError("GL ATTR", SDL_GetError());
+  if (0 != SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2)) displayError("GL ATTR", SDL_GetError());
+
   SDL_DisplayMode current;
-  SDL_GetCurrentDisplayMode(0, &current);
-  SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
+  if (0 != SDL_GetCurrentDisplayMode(0, &current)) displayError("GetCurrentDisplayMode", SDL_GetError());
+  auto windowFlags = SDL_WINDOW_OPENGL; // |SDL_WINDOW_RESIZABLE;
+  SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL example",
+                                        SDL_WINDOWPOS_UNDEFINED,
+                                        SDL_WINDOWPOS_UNDEFINED,
+                                        1280, 720,
+                                        windowFlags);
+  if (window == NULL) displayError("SDL_CreateWindow", SDL_GetError());
   SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-  SDL_GL_SetSwapInterval(1); // Enable vsync
+  if (SDL_GL_SetSwapInterval(1) != 0) { // Enable vsync
+    displayError("SDL_GL_SetSwapInterval(1)", SDL_GetError());
+  }
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
