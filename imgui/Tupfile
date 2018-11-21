@@ -1,6 +1,13 @@
+CXXC = clang++-7
+
 CFLAGS = -Wall
+CFLAGS+= -std=c++17
+CFLAGS+= -O3
+
 INCLUDE =
+
+STATIC_LIBS =
 LIBS =
 
-: foreach *.cpp |> clang++ $(CFLAGS) $(INCLUDE) -c %f -o %o |> %B.o
-: *.o |> ar crs %o %f |> libimgui.a
+: foreach *.cpp |> $(CXXC) $(CFLAGS) $(INCLUDE) -c %f -o %o |> %B.o
+: *.o $(STATIC_LIBS) |> ar crs %o %f |> libimgui.a

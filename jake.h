@@ -3,24 +3,30 @@
 #include <SDL.h>
 #include "imgui.h"
 
-#define SDL_CHECK_ZERO_FATAL(CODE) {                    \
-    if (CODE != 0) {                                    \
-      SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,     \
-                      "%s, %s", #CODE, SDL_GetError()); \
-      return -1;                                        \
-    }                                                   \
+#define SDL_CHECK_ZERO_FATAL(CODE) {                                    \
+    int result = (CODE);                                                \
+    if (result != 0) {                                                  \
+      SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,                     \
+                      "[%s:%d]: %s = %d, %s", __FILE__, __LINE__,       \
+                      #CODE, result, SDL_GetError());                   \
+      return -1;                                                        \
+    }                                                                   \
   };
 
-#define SDL_CHECK_ZERO(CODE) {                       \
-    if (CODE != 0)                                   \
-      SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,      \
-                  "%s, %s", #CODE, SDL_GetError());  \
+#define SDL_CHECK_ZERO(CODE) {                                       \
+    int result = (CODE);                                             \
+    if (result != 0) {                                               \
+      SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,                      \
+                  "[%s:%d]: %s = %d, %s", __FILE__, __LINE__,        \
+                  #CODE, result, SDL_GetError());                    \
+    }                                                                \
   };
 
-#define SDL_CHECK_NOTNULL(CODE) {                   \
-    if (CODE == NULL)                               \
-      SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,     \
-                  "%s, %s", #CODE, SDL_GetError()); \
+#define SDL_CHECK_NOTNULL(CODE) {                                    \
+    if ((CODE) == NULL)                                              \
+      SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,                      \
+                  "[%s:%d]: %s = NULL, %s", __FILE__, __LINE__,      \
+                  #CODE, SDL_GetError());                            \
   };
 
 const int DEFAULT_WINDOW_WIDTH = 1280;

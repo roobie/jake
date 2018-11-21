@@ -7,7 +7,8 @@
 // See imgui_impl_sdl.cpp for details.
 
 // #include <stdio.h>
-#include <SDL.h>
+#define GL3_PROTOTYPES 1
+#include <GL/glew.h>
 #include <SDL_opengl.h>
 #include "jake.h"
 #include "jake_lib.h"
@@ -15,9 +16,34 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl2.h"
 
+void Cleanup(SDL_Window* window, SDL_GLContext gl_context) {
+
+  ImGui_ImplOpenGL2_Shutdown();
+  ImGui_ImplSDL2_Shutdown();
+  ImGui::DestroyContext();
+
+  // Cleanup all the things we bound and allocated
+  //shader.CleanUp();
+
+  //glDisableVertexAttribArray(0);
+  //glDeleteBuffers(1, vbo);
+  //glDeleteVertexArrays(1, vao);
+  SDL_GL_DeleteContext(gl_context);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+}
+
+void
+printInfo() {
+  int glmaj, glmin;
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &glmaj);
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &glmin);
+  SDL_Log("GL Version: %d.%d", glmaj, glmin);
+};
+
 int
 main(int, char**) {
-  SDL_CHECK_ZERO_FATAL(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER));
+  SDL_CHECK_ZERO_FATAL(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER));
 
   SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1));
   SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24));
@@ -33,12 +59,25 @@ main(int, char**) {
                                         SDL_WINDOWPOS_UNDEFINED,
                                         DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT,
                                         windowFlags);
-  SDL_CHECK_NOTNULL(window);
+  IM_ASSERT(window);
+
+  auto renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+  auto renderer = SDL_CreateRenderer(window, -1, renderer_flags);
+  IM_ASSERT(renderer);
 
   SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-  SDL_CHECK_NOTNULL(gl_context);
+  IM_ASSERT(gl_context);
+
+  SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE));
 
   SDL_CHECK_ZERO(SDL_GL_SetSwapInterval(1));
+
+	// Init GLEW
+	// Apparently, this is needed for Apple. Thanks to Ross Vander for letting me know
+#ifndef __APPLE__
+	glewExperimental = GL_TRUE;
+	glewInit();
+#endif
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -65,16 +104,19 @@ main(int, char**) {
   //   when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
   // - Read 'misc/fonts/README.txt' for more instructions and details.
   // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-  // SDL_CHECK_NOTNULL(io.Fonts->AddFontDefault());
-  SDL_CHECK_NOTNULL(io.Fonts->AddFontFromFileTTF("./imgui/misc/fonts/Roboto-Medium.ttf", 15.0f));
-  //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-  //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
+  // IM_ASSERT(io.Fonts->AddFontDefault());
+  // IM_ASSERT(io.Fonts->AddFontFromFileTTF("./imgui/misc/fonts/Roboto-Medium.ttf", 15.0f));
+  IM_ASSERT(io.Fonts->AddFontFromFileTTF("./imgui/misc/fonts/Cousine-Regular.ttf", 15.0f));
+  //IM_ASSERT(io.Fonts->AddFontFromFileTTF("./imgui/misc/fonts/DroidSans.ttf", 16.0f));
   //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
+  //IM_ASSERT(io.Fonts->AddFontFromFileTTF("./imgui/misc/fonts/ProggyTiny.ttf", 15.0f));
   //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
   //IM_ASSERT(font != NULL);
 
   // GameWorld - the one and only
   static GameWorld world;
+
+  printInfo();
 
   // Main loop
   while (world.do_run) {
@@ -137,7 +179,7 @@ main(int, char**) {
       // world.debug_info.framerate = ImGui::GetIO().Framerate;
       world.debug_info.framerate = io.Framerate;
       world.debug_info.frame_length = 1000.0f / world.debug_info.framerate;
-      ImGui::Text("Average %.3f ms/frame (%.1f FPS)",
+      ImGui::Text("Average %.1f ms/frame (%.1f FPS)",
                   world.debug_info.frame_length, world.debug_info.framerate);
 
       ImGui::Text("Delay (wanted/actual): %d ms/%.3f s",
@@ -160,20 +202,20 @@ main(int, char**) {
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
       });
 
+    /** nogo
+    SDL_Rect rect = {10, 10, 10, 10};
+    SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
+    SDL_RenderFillRect(renderer, &rect);
+
+    SDL_RenderPresent(renderer);
+    */
     SDL_GL_SwapWindow(window);
 
     COUNT_PERFORMANCE(world.debug_info.actual_delay_perf, SDL_Delay(world.frame_delay));
     world.debug_info.actual_delay_s = (float)world.debug_info.actual_delay_perf / performance_frequency;
   }
 
-  // Cleanup
-  ImGui_ImplOpenGL2_Shutdown();
-  ImGui_ImplSDL2_Shutdown();
-  ImGui::DestroyContext();
-
-  SDL_GL_DeleteContext(gl_context);
-  SDL_DestroyWindow(window);
-  SDL_Quit();
+  Cleanup(window, gl_context);
 
   return 0;
 }
