@@ -9,25 +9,29 @@
 // #include <stdio.h>
 #define GL3_PROTOTYPES 1
 #include <GL/glew.h>
+//#include "gl3w.h"
 #include <SDL_opengl.h>
 #include "jake.h"
 #include "jake_lib.h"
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl2.h"
+#include "imgui_impl_opengl3.h"
+
+#include "tutorial.h"
 
 void Cleanup(SDL_Window* window, SDL_GLContext gl_context) {
 
-  ImGui_ImplOpenGL2_Shutdown();
+  ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplSDL2_Shutdown();
   ImGui::DestroyContext();
 
   // Cleanup all the things we bound and allocated
-  //shader.CleanUp();
+  shader.CleanUp();
 
-  //glDisableVertexAttribArray(0);
-  //glDeleteBuffers(1, vbo);
-  //glDeleteVertexArrays(1, vao);
+  glDisableVertexAttribArray(0);
+  glDeleteBuffers(1, vbo);
+  glDeleteVertexArrays(1, vao);
+
   SDL_GL_DeleteContext(gl_context);
   SDL_DestroyWindow(window);
   SDL_Quit();
@@ -45,11 +49,13 @@ int
 main(int, char**) {
   SDL_CHECK_ZERO_FATAL(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER));
 
+  SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0));
+                 SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE));
   SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1));
   SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24));
   SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8));
-  SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2));
-  SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2));
+  SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3));
+  SDL_CHECK_ZERO(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0));
 
   SDL_DisplayMode current;
   SDL_CHECK_ZERO(SDL_GetCurrentDisplayMode(0, &current));
@@ -61,9 +67,9 @@ main(int, char**) {
                                         windowFlags);
   IM_ASSERT(window);
 
-  auto renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-  auto renderer = SDL_CreateRenderer(window, -1, renderer_flags);
-  IM_ASSERT(renderer);
+  // auto renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+  // auto renderer = SDL_CreateRenderer(window, -1, renderer_flags);
+  // IM_ASSERT(renderer);
 
   SDL_GLContext gl_context = SDL_GL_CreateContext(window);
   IM_ASSERT(gl_context);
@@ -74,10 +80,19 @@ main(int, char**) {
 
 	// Init GLEW
 	// Apparently, this is needed for Apple. Thanks to Ross Vander for letting me know
-#ifndef __APPLE__
 	glewExperimental = GL_TRUE;
-	glewInit();
-#endif
+	IM_ASSERT(glewInit() == GLEW_OK);
+
+  // if (gl3wInit()) {
+  //     fprintf(stderr, "failed to initialize OpenGL\n");
+  //     return -1;
+  // }
+  // if (!gl3wIsSupported(3, 2)) {
+  //     fprintf(stderr, "OpenGL 3.2 not supported\n");
+  //     return -1;
+  // }
+
+  SetupBufferObjects();
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -87,7 +102,7 @@ main(int, char**) {
 
   // Setup Platform/Renderer bindings
   ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
-  ImGui_ImplOpenGL2_Init();
+  ImGui_ImplOpenGL3_Init();
 
   // Setup Style
   ImGui::StyleColorsDark();
@@ -151,7 +166,7 @@ main(int, char**) {
     }
 
     // Start the Dear ImGui frame
-    ImGui_ImplOpenGL2_NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame(window);
     ImGui::NewFrame();
 
@@ -193,13 +208,15 @@ main(int, char**) {
 
     // Rendering
     COUNT_PERFORMANCE(world.debug_info.imgui_draw_time_perf, {
-        ImGui::Render();
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-        auto clear_color = world.ui.clear_color;
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-        // glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
-        ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+            SDL_GL_MakeCurrent(window, gl_context);
+            ImGui::Render();
+            glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+            auto clear_color = world.ui.clear_color;
+            glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+            glClear(GL_COLOR_BUFFER_BIT);
+            Render(window);
+            // glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
       });
 
     /** nogo

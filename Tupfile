@@ -1,3 +1,4 @@
+CC = clang-7
 CXXC = clang++-7
 
 CFLAGS = -Wall
@@ -15,6 +16,9 @@ STATIC_LIBS = imgui/libimgui.a
 LIBS = -lSDL2
 LIBS+= -lGL
 LIBS+= -lGLEW
+LIBS+= -lglfw
 
 : foreach *.cpp |> $(CXXC) $(CFLAGS) $(INCLUDE) -c %f -o %o |> %B.o
-: *.o $(STATIC_LIBS) |> clang++ %f -o %o $(LIBS) |> jake
+: *.o $(STATIC_LIBS) |> $(CXXC) %f -o %o $(LIBS) |> jake
+
+: foreach *.c |> $(CC) $(INCLUDE) -c %f -o %o |> %B.o

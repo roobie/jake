@@ -1,4 +1,6 @@
-#version 150
+//#version 300 es
+#version 130
+//#version 150
 
 // in_Position was bound to attribute index 0 and in_Color was bound to
 // attribute index 1

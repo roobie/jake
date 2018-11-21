@@ -298,8 +298,8 @@ void Render(SDL_Window *mainWindow)
   // First, render a square without any colors ( all vertexes will be black )
   // ===================
   // Make our background grey
-  glClearColor(0.5, 0.5, 0.5, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  //glClearColor(0.5, 0.5, 0.5, 1.0);
+  //glClear(GL_COLOR_BUFFER_BIT);
 
   // Invoke glDrawArrays telling that our data is a line loop and we want to draw 2-4 vertexes
   glDrawArrays(GL_LINE_LOOP, 0, 4);
@@ -314,8 +314,8 @@ void Render(SDL_Window *mainWindow)
   glEnableVertexAttribArray(colorAttributeIndex);
 
   // Make our background black
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  //glClearColor(0.0, 0.0, 0.0, 0.0);
+  //glClear(GL_COLOR_BUFFER_BIT);
 
   // Invoke glDrawArrays telling that our data is a line loop and we want to draw 2-4 vertexes
   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
